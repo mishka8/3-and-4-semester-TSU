@@ -1,4 +1,4 @@
-using System;
+using System;//Поменять местами строки с максимальной и минимальной суммой элементов.
 namespace Second
 {
     class Matrix
