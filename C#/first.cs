@@ -25,7 +25,8 @@ namespace first1
                 }
                 return true;
             }
-
+            
+            //Поиск индекса числа num в массиве x
             static int IndexOf(int[] x, int size, int num)
             {
                 for (int i = 0; i < size; i++)
@@ -35,6 +36,7 @@ namespace first1
                 return -1;
             }
 
+            
             static int[] RandomArray(int size, int min, int max)
             {
                 // Проверка, что диапазон достаточен для уникальных чисел
