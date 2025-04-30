@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Immutable;
-using System.Diagnostics.Tracing;
 //Вывести на экран 3 исходных строки не менее, чем из 5 слов.
 //Создать новую строку из двух на выбор,
 //затем расположить их в алфавитном порядке.
 //Ход программы отобразить пояснениями на экране.
+using System;
 namespace String1
 {
     internal class Program
@@ -29,8 +27,7 @@ namespace String1
             string input1 = Console.ReadLine();
             string input2 = Console.ReadLine();
 
-
-            int.TryParse(input1, out num1);
+            int.TryParse(input1, out num1);//метод преобразовываем строку в указанный тип
             int.TryParse(input2, out num2);
             
             if(num1 > 0 && num2 > 0 && num1 < 4 && num2 < 4)
@@ -39,6 +36,7 @@ namespace String1
 
                 Console.WriteLine("Результат\n" + str_res);
                 Console.WriteLine();
+
                 //теперь строку которую получили отсортируем по алфавиту 
                 //разделим на слова и массив слов отсортируем и выведем
                 //и уберем знаки препинания
@@ -46,10 +44,12 @@ namespace String1
                 string[] words = str_res.Replace("!", "").Replace("?", "").Replace(",", "")
                     .Replace("—", "").Replace(".", "").Replace("  ", " ").Split(' ');
 
+
                 foreach (string word in words)
                 {
                     Console.Write(word + ' ');
                 }
+                Console.WriteLine();
                 Console.WriteLine();
 
                 Array.Sort(words);
