@@ -372,8 +372,64 @@ BigNumber& BigNumber::operator+=(const BASE& num_base)
 
 BigNumber BigNumber::operator-(const BigNumber& other)
 {
+    if(*this < other)//если вычитаемое меньше
+    {
+        cerr << "Error wiht size" << endl;
+        exit(-2);
+    }
 
+    int n = len;
+    int m = other.len;
+
+    BigNumber res(n);
+
+    int j = 0;
+    int k = 0;
+    DBASE tmp;
+
+    while(j < m)//смотрим по длине other
+    {
+        tmp = (1 << BASE_SIZE) | coefs[j];//искусственно увеличиваем число
+        tmp = tmp - other.coefs[j] - k;
+        res.coefs[j] = (BASE)tmp;
+
+        k = !(tmp >> BASE_SIZE);//проверка если мы занимали у следующего разряда
+        j++;
+    }
+
+    while(j < n)//если осталось убираем перенос который мог остаться
+    {
+        tmp = (1 << BASE_SIZE) | coefs[j];
+        tmp = tmp - k;//отнимаем перенос
+
+        k = (tmp >> BASE_SIZE);
+        j++;
+    }
+
+    while(res.coefs.size() > 1 && res.coefs.back() == 0)//
+    {
+        res.coefs.pop_back();
+        res.len--;
+    }
+
+    return res;
 }
+
+BigNumber& BigNumber::operator-=(const BigNumber& other)
+{
+    *this = *this - other;
+    return *this;
+}
+
+BigNumber BigNumber::operator-(const BASE& num_base)
+{
+    
+}
+
+
+
+
+
 
 int main()
 {
