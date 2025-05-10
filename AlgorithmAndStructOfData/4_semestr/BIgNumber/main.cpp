@@ -26,7 +26,7 @@ class BigNumber
 
 public:
     BigNumber(const string& str);
-    BigNumber(int l = 0);
+    BigNumber(int l = 0, bool fl = false);
     BigNumber(const BigNumber&) = default;//так как для вектора копирование числа определено
     ~BigNumber() = default;//так как для вектора деструктор определен\
 
@@ -77,7 +77,7 @@ public:
     }
     string outputHex()
     {
-        
+
     }
 
 
@@ -93,14 +93,24 @@ public:
 
 };
 
-BigNumber::BigNumber(int lenght)
+BigNumber::BigNumber(int lenght, bool fl)
 {
-    if (lenght <= 0) {
+    if (lenght <= 0)
+    {
         coefs.push_back(0);
         len = 1;
         return;
     }
 
+    if(fl == true)
+    {
+        len = lenght;
+        for(int i = 0; i < lenght; ++i)
+        {
+            coefs[i] = 0;
+        }
+        return;
+    }
     //заполняем рандомными коэфицентами вектор
     for (int i = 0; i < lenght; i++)
     {
@@ -109,8 +119,7 @@ BigNumber::BigNumber(int lenght)
         //rand создаёт число длины 16 для того чтобы заполнить uint надо 32
         if (BASE_SIZE > 16)
         {
-        {
-                coef = coef << 16;
+            coef = coef << 16;
             coef += rand();
         }
         coefs.push_back(coef);
@@ -128,15 +137,14 @@ BigNumber::BigNumber(int lenght)
     }
 
     len = lenght;
-
-    }
 }
 
 BigNumber::BigNumber(const string& str)
 {
     if (str.empty())
     {
-        len = 0;
+        coefs.push_back(0);
+        len = 1;
         return;
     }
 
@@ -147,7 +155,7 @@ BigNumber::BigNumber(const string& str)
 
     for (int i = str.size() - 1; i >= 0; i--)//цикл по строке
     {
-        int from_str_to_int = 0;
+        unsigned int from_str_to_int = 0;
 
         if (str[i] >= '0' && str[i] <= '9')
             from_str_to_int = str[i] - '0';
@@ -160,11 +168,11 @@ BigNumber::BigNumber(const string& str)
 
         else
         {
-            cout << "WRONG" << endl;
+            cerr << "WRONG" << endl;
             return;
         }
 
-        bitset<BASE_SIZE> tmp(from_str_to_int);//двоичный вектор из 0 и 1
+        bitset<BASE_SIZE> tmp(from_str_to_int);//двоичный вектор из 0 и 1//можно убрать
         res = res | (tmp << k);
         //добавляем в res сдвигаем добавленное число на 4
         //так как максимальное число в 16-ти системе
@@ -203,6 +211,11 @@ BigNumber::BigNumber(const string& str)
 
     len = coefs.size();
 
+    while(coefs[len - 1] == 0 && len != 1)
+    {
+        coefs.pop_back();
+        len--;
+    }
 }
 
 BigNumber BigNumber::operator=(const BigNumber& other)
@@ -248,45 +261,24 @@ bool BigNumber::operator>(const BigNumber& other) const
 
 bool BigNumber::operator<(const BigNumber& other) const
 {
-    /*if (len < other.len)
-        return false;
-
-    if (len > other.len)
-        return false;
-
-    for (int i = ken - 1; i < 0; ++i)
-    {
-        if (coefs[i] < other.coefs[i])
-            return true;
-        if (coefs[i] > other.coefs[i])
-            return false;
-    }
-
-    return false;*/
     return other > *this;//воспользуемся уже существующим оператором
 }
 
 bool BigNumber::operator!=(const BigNumber& other) const
 {
-    //(*this == other)
-    //так как они равны
-    //то !(*this == other) false
-    //если не равны
-    //то !(*this == other) будет true
-
     return !(*this == other);
 }
 
 bool BigNumber::operator>=(const BigNumber& other) const
 {
     //>= по сути комбинация > и =
-    return (*this > other) || (*this == other);
+    return !(*this < other);
 }
 
 bool BigNumber::operator<=(const BigNumber& other) const
 {
     //<= по сути комбинация < и =
-    return (*this < other) || (*this == other);
+    return !(*this > other);
 }
 
 BigNumber BigNumber::operator+(const BigNumber& other)
@@ -299,7 +291,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
     int t = 0;
     t = min(n, m);
 
-    BigNumber sum(l);
+    BigNumber sum(l, true);
 
     DBASE tmp;
     int j = 0;//по разрядам
@@ -313,7 +305,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
         //преобразуем в BASE и заносим то что осталось
         sum.coefs[j] = (BASE)tmp;
 
-        k = (BASE) (tmp >> BASE_SIZE);
+        k = (BASE) (tmp >> BASE_SIZE);// (>> BASE_SIZE) = /2^32
         // в k остается перенос который мы добавляем в следующий разряд
 
         j++;
@@ -361,7 +353,7 @@ BigNumber& BigNumber::operator+=(const BigNumber& other)
 BigNumber BigNumber::operator+(const BASE& num_base)
 {
     int n = len;
-    BigNumber sum(n + 1);
+    BigNumber sum(n + 1, true);
 
     DBASE tmp;
     DBASE k = num_base;
@@ -404,7 +396,7 @@ BigNumber BigNumber::operator-(const BigNumber& other)
     int n = len;
     int m = other.len;
 
-    BigNumber res(n);
+    BigNumber res(n, true);
 
     int j = 0;
     int k = 0;
@@ -444,10 +436,10 @@ BigNumber& BigNumber::operator-=(const BigNumber& other)
     return *this;
 }
 
-//BigNumber BigNumber::operator-(const BASE& num_base)
-//{
+BigNumber BigNumber::operator-(const BASE& num_base)
+{
 
-//}
+}
 
 int main()
 {
