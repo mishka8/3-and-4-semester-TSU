@@ -65,7 +65,7 @@ public:
 
 
     BigNumber operator/(const BASE&);
-    BigNumber& operator /= (const BASE&);  
+    BigNumber& operator /= (const BASE&);
 
     BigNumber operator%(const BASE&);
 };
@@ -78,11 +78,14 @@ BigNumber::BigNumber(int lenght)
         return;
     }
 
-    for (int i = 0; i < lenght; i++)//заполняем рандомными коэфицентами вектор 
+    //заполняем рандомными коэфицентами вектор
+    for (int i = 0; i < lenght; i++)
     {
         BASE coef = rand();
 
-        if (BASE_SIZE > 16)//для инта
+        //rand создаёт число длины 16 для того чтобы заполнить uint надо 32
+        if (BASE_SIZE > 16)
+        {
         {
             coef = coef << 16;
             coef += rand();
@@ -103,6 +106,7 @@ BigNumber::BigNumber(int lenght)
 
     len = lenght;
 
+    }
 }
 
 BigNumber::BigNumber(string& str)
@@ -137,8 +141,7 @@ BigNumber::BigNumber(string& str)
             return;
         }
 
-        bitset<BASE_SIZE> tmp(from_str_to_int);
-
+        bitset<BASE_SIZE> tmp(from_str_to_int);//двоичный вектор из 0 и 1
         res = res | (tmp << k);
         //добавляем в res сдвигаем добавленное число на 4
         //так как максимальное число в 16-ти системе
@@ -178,6 +181,14 @@ BigNumber::BigNumber(string& str)
     len = coefs.size();
 
 }
+
+BigNumber BigNumber::operator=(const BigNumber& other)
+{
+    this->coefs = other.coefs;
+    this->len = other.len;
+    return *this;
+}
+
 
 bool BigNumber::operator==(const BigNumber& other) const
 {
@@ -235,7 +246,7 @@ bool BigNumber::operator<(const BigNumber& other) const
 bool BigNumber::operator!=(const BigNumber& other) const
 {
     //(*this == other)
-    //так как они равны 
+    //так как они равны
     //то !(*this == other) false
     //если не равны
     //то !(*this == other) будет true
@@ -259,7 +270,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
 {
     int n = this->len;//длина число u
     int m = other.len;//длина числа v
-    
+
     int l = 0;//длина результата числа w
     l = max(n, m) + 1;//может добавиться новый разряд
     int t = 0;
@@ -271,11 +282,11 @@ BigNumber BigNumber::operator+(const BigNumber& other)
     int j = 0;//по разрядам
     int k = 0;//переход
 
-    while (j < t)//сложение длины которая есть и там и там 
+    while (j < t)//сложение длины которая есть и там и там
     {
         //скаладываем оба вектора + перенос на след разряд
         tmp = this->coefs[j] + other.coefs[j] + k;
-        
+
         //преобразуем в BASE и заносим то что осталось
         sum.coefs[j] = (BASE)tmp;
 
@@ -333,12 +344,12 @@ BigNumber BigNumber::operator+(const BASE& num_base)
     DBASE k = num_base;
 
     int j = 0;
-    while (j < n)
+    while (j < n)//сложение длины которая есть и там и там
     {
-        tmp = (DBASE)coefs[j] + k;
+        tmp = (DBASE)coefs[j] + k;//прибавляем число
         sum.coefs[j] = (BASE)tmp;
 
-        k = (BASE)(tmp >> BASE_SIZE);
+        k = (BASE)(tmp >> BASE_SIZE);//смотрим сдвиг если переходим в новый разяряд
 
         j++;
     }
@@ -349,7 +360,7 @@ BigNumber BigNumber::operator+(const BASE& num_base)
         sum.len--;
         sum.coefs.pop_back();
     }
-    
+
     return sum;
 }
 
