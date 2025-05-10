@@ -40,57 +40,36 @@ public:
     bool operator <= (const BigNumber&) const;
 
     BigNumber operator+(const BigNumber&);
-    BigNumber& operator+=(const BigNumber&);
-    //coefs + other.coefs
-
+    BigNumber& operator+=(const BigNumber&);//coefs + other.coefs 
 
     BigNumber operator+(const BASE&);
-    BigNumber& operator+=(const BASE&);
-    //coefs + BASE(одно число)
-
+    BigNumber& operator+=(const BASE&);//coefs + BASE(одно число)
+    
     BigNumber operator-(const BigNumber&);
     BigNumber& operator-=(const BigNumber&);
-
 
     BigNumber operator-(const BASE&);
     BigNumber& operator-=(const BASE&);
 
-
     BigNumber operator*(const BigNumber&);
     BigNumber& operator*=(const BigNumber&);
-
 
     BigNumber operator*(const BASE&);
     BigNumber& operator*=(const BASE&);
 
-
     BigNumber operator/(const BASE&);
     BigNumber& operator /= (const BASE&);
 
-    BigNumber operator%(const BASE&);
+    BigNumber operator/(const BigNumber&);//
+    BigNumber& operator/=(const BigNumber&);//
 
-    void inputHex(const string& num)
-    {
-        BigNumber res(num);
-        *this = res;
+    BASE operator%(const BASE&);
 
-    }
-    string outputHex()
-    {
+    void inputHex(const string& num);//
+    string outputHex();//
 
-    }
-
-
-    friend ostream& operator<<(ostream& os, const BigNumber& other)
-    {
-
-    }
-
-    friend istream& operator>>(istream& os, const BigNumber& other)
-    {
-
-    }
-
+    friend ostream& operator<<(ostream& os, const BigNumber& other);//
+    friend istream& operator>>(istream& os, const BigNumber& other);//
 };
 
 BigNumber::BigNumber(int lenght, bool fl)
@@ -102,10 +81,10 @@ BigNumber::BigNumber(int lenght, bool fl)
         return;
     }
 
-    if(fl == true)
+    if (fl == true)//если флаг true то будет большое число из нулей сделано для удобства операций
     {
         len = lenght;
-        for(int i = 0; i < lenght; ++i)
+        for (int i = 0; i < lenght; ++i)
         {
             coefs[i] = 0;
         }
@@ -148,7 +127,6 @@ BigNumber::BigNumber(const string& str)
         return;
     }
 
-
     bitset<BASE_SIZE> res(0);//нулевой булев вектор
     len = 0;
     int  k = 0;
@@ -174,44 +152,24 @@ BigNumber::BigNumber(const string& str)
 
         bitset<BASE_SIZE> tmp(from_str_to_int);//двоичный вектор из 0 и 1//можно убрать
         res = res | (tmp << k);
-        //добавляем в res сдвигаем добавленное число на 4
-        //так как максимальное число в 16-ти системе
-        //это 15 = 1111 в двоичной системе
-
-        //в пустой вектор добавляем 15 и сдвигаем на 4 чтобы добалять новые числа
-        //0000 0000 0000 0000
-        //0000 0000 0000 1111
-        //0000 0000 1111 0000
-
-        //в вектор длобавляем 8 и сдвигаем на 8 чтобы добавить новые число и не испортить старые
-        //0000 0000 1111 0111
-        //0000 1111 0111 0000
-
-        //добавляем 5 и сдвигаем на 12  чтобы добавить новые числа и не испортить старые
-        //0000 1111 0111 0101
-        //1111 0111 0101 0000
 
         k = k + 4;
         if (k >= BASE_SIZE)
         {
             k = 0;
             coefs.push_back((BASE)res.to_ulong());
-            //bitset нельзя просто так перевести в BASE
-            //в cppreferns bitset можно перевести в ulong, ullong, string
-            //мы переводим его в ulong потом переводим в BASE
             res = 0;
         }
     }
 
     if (k > 0)
     {
-        coefs.push_back((BASE)res.to_ulong());//добавляем в вектор то что осталось
-
+        coefs.push_back((BASE)res.to_ulong());
     }
 
     len = coefs.size();
 
-    while(coefs[len - 1] == 0 && len != 1)
+    while (coefs[len - 1] == 0 && len != 1)
     {
         coefs.pop_back();
         len--;
@@ -224,7 +182,6 @@ BigNumber BigNumber::operator=(const BigNumber& other)
     this->len = other.len;
     return *this;
 }
-
 
 bool BigNumber::operator==(const BigNumber& other) const
 {
@@ -305,7 +262,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
         //преобразуем в BASE и заносим то что осталось
         sum.coefs[j] = (BASE)tmp;
 
-        k = (BASE) (tmp >> BASE_SIZE);// (>> BASE_SIZE) = /2^32
+        k = (BASE)(tmp >> BASE_SIZE);// (>> BASE_SIZE) = /2^32
         // в k остается перенос который мы добавляем в следующий разряд
 
         j++;
@@ -335,7 +292,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
     sum.coefs[j] = k;
 
     //удаление если перенос равен нулю
-    if(sum.coefs[j] == 0)
+    if (sum.coefs[j] == 0)
     {
         sum.len--;
         sum.coefs.pop_back();
@@ -387,7 +344,7 @@ BigNumber& BigNumber::operator+=(const BASE& num_base)
 
 BigNumber BigNumber::operator-(const BigNumber& other)
 {
-    if(*this < other)//если вычитаемое меньше
+    if (*this < other)//если вычитаемое меньше
     {
         cerr << "Error wiht size" << endl;
         exit(-2);
@@ -402,7 +359,7 @@ BigNumber BigNumber::operator-(const BigNumber& other)
     int k = 0;
     DBASE tmp;
 
-    while(j < m)//смотрим по длине other
+    while (j < m)//смотрим по длине other
     {
         tmp = (1 << BASE_SIZE) | coefs[j];//искусственно увеличиваем число
         tmp = tmp - other.coefs[j] - k;
@@ -412,16 +369,17 @@ BigNumber BigNumber::operator-(const BigNumber& other)
         j++;
     }
 
-    while(j < n)//если осталось убираем перенос который мог остаться
+    while (j < n)//если осталось убираем перенос который мог остаться
     {
         tmp = (1 << BASE_SIZE) | coefs[j];
         tmp = tmp - k;//отнимаем перенос
 
-        k = (tmp >> BASE_SIZE);
+        res.coefs[j] = (BASE)tmp;
+        k = !(tmp >> BASE_SIZE);
         j++;
     }
 
-    while(res.coefs.size() > 1 && res.coefs.back() == 0)//
+    while (res.coefs.size() > 1 && res.coefs.back() == 0)
     {
         res.coefs.pop_back();
         res.len--;
@@ -437,9 +395,231 @@ BigNumber& BigNumber::operator-=(const BigNumber& other)
 }
 
 BigNumber BigNumber::operator-(const BASE& num_base)
+{    
+    int n = len;//тут понимаем что число this > num_base
+    BigNumber res(n, true);//делаем большое число из нулей
+
+    DBASE tmp;
+
+    int j = 0;//разряды
+    BASE k = 0;//перенос
+
+    
+
+    tmp = (1 << BASE_SIZE) | coefs[j];
+    tmp = tmp - num_base - k;
+
+    res.coefs[j] = (BASE)tmp;
+    k = !(tmp >> BASE_SIZE);
+
+    while (j < n)
+    {
+        tmp = (1 << BASE_SIZE) | coefs[j];
+        tmp = tmp - k;
+
+        res.coefs[j] = (BASE)tmp;
+
+        k = !(tmp >> BASE_SIZE);
+        j++;
+    }
+
+    while (res.coefs[len - 1] == 0 && res.len > 1)
+    {
+        res.len--;
+        res.coefs.pop_back();
+    }
+
+    return res;
+}
+
+BigNumber& BigNumber::operator-=(const BASE& num_base)
+{
+    *this = *this - num_base;
+    return *this;
+}
+
+BigNumber BigNumber::operator*(const BigNumber& other)
+{
+    int n = len;
+    int m = other.len;
+
+    int j = 0;
+    int i = 0;
+    DBASE tmp;
+    DBASE k = 0;
+
+    BigNumber res(n + m, true);
+
+    while (j < m)
+    {
+        if (other.coefs[j] == 0)
+        {
+            j++;
+            continue;
+        }
+
+        k = 0;
+        i = 0;
+        while (i < n)
+        {
+            tmp = coefs[i] * other.coefs[j];  +k + res.coefs[i + j];//i + j значение на данный момент
+
+            res.coefs[i + j] = (BASE)tmp;
+
+            k = (BASE)(tmp >> BASE_SIZE);
+
+            i++;
+        }
+
+        res.coefs[n + j] = k;//последний перенос
+
+        j++;
+    }
+
+    while (res.len > 1 && res.coefs.back())
+    {
+        res.len--;
+        res.coefs.pop_back();
+    }
+
+    return res;
+}
+
+BigNumber& BigNumber::operator*=(const BigNumber& other)
+{
+    *this = *this * other;
+    return *this;
+}
+
+BigNumber BigNumber::operator*(const BASE& num_base)
+{
+    int n = len;
+    BigNumber res(n + 1, true);
+
+    int j = 0;
+    DBASE k = 0;
+    DBASE tmp;
+
+    while (j < n)
+    {
+        tmp = coefs[j] * num_base + k;//возможно надо каждую переменную приводить явно к DBASE
+        res.coefs[j] = (BASE)tmp;
+
+        k = (BASE)(tmp >> BASE_SIZE);
+
+        j++;
+    }
+
+    res.coefs[j] = k;
+    while(res.coefs[res.len - 1] == 0 && res.len > 1)
+    {
+        res.len--;
+        res.coefs.pop_back();
+    }
+
+
+    return res;
+}
+
+BigNumber& BigNumber::operator*=(const BASE& num_base)
+{
+    *this = *this * num_base;
+    return *this;
+}
+
+BigNumber BigNumber::operator/(const BASE& num_base)
+{
+    if (num_base == 0)
+    {
+        cerr << "del from 0 IN /";
+        exit(-1);
+    }
+
+    int n = len;
+
+    BigNumber res(n, true);
+
+    BASE r = 0;
+    DBASE tmp;
+    int j = n - 1;
+    
+    while (j >= 0)
+    {
+        tmp = (r << BASE_SIZE) + coefs[j];
+
+        res.coefs[j] = (BASE)(tmp / num_base);
+        r = (BASE)(tmp % num_base);
+
+        j--;
+    }
+
+    while (res.coefs.back() == 0 && res.len > 1)
+    {
+        res.len--;
+        res.coefs.pop_back();
+    }
+
+    return res;
+}
+
+BigNumber& BigNumber::operator/=(const BASE& num_base)
+{
+    *this = *this / num_base;
+    return *this;
+}
+
+BASE BigNumber::operator%(const BASE& num_base)
+{
+    if (num_base == 0)
+    {
+        cerr << "del from 0 IN %";
+        exit(-1);
+    }
+
+    BASE res = 0;
+    int n = len;
+    int j = n - 1;
+    DBASE tmp;
+
+    while (j >= 0)
+    {
+        tmp = (res << BASE_SIZE) + coefs[j];
+
+        res = (BASE)(tmp & num_base);
+
+        j--;
+    }
+
+    return res;
+}
+
+
+void BigNumber::inputHex(const string& num)
 {
 
 }
+string BigNumber::outputHex()
+{
+
+}
+
+ostream& operator<<(ostream& out, BigNumber& other)
+{
+
+}
+
+istream& operator>>(istream& out, BigNumber& other)
+{
+
+}
+
+
+
+void test()
+{
+
+}
+
 
 int main()
 {
