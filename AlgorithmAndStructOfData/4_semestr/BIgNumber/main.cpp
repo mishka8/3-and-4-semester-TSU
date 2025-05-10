@@ -25,7 +25,7 @@ class BigNumber
     int len;
 
 public:
-    BigNumber(string& str);
+    BigNumber(const string& str);
     BigNumber(int l = 0);
     BigNumber(const BigNumber&) = default;//так как для вектора копирование числа определено
     ~BigNumber() = default;//так как для вектора деструктор определен\
@@ -68,6 +68,29 @@ public:
     BigNumber& operator /= (const BASE&);
 
     BigNumber operator%(const BASE&);
+
+    void inputHex(const string& num)
+    {
+        BigNumber res(num);
+        *this = res;
+
+    }
+    string outputHex()
+    {
+        
+    }
+
+
+    friend ostream& operator<<(ostream& os, const BigNumber& other)
+    {
+
+    }
+
+    friend istream& operator>>(istream& os, const BigNumber& other)
+    {
+
+    }
+
 };
 
 BigNumber::BigNumber(int lenght)
@@ -87,7 +110,7 @@ BigNumber::BigNumber(int lenght)
         if (BASE_SIZE > 16)
         {
         {
-            coef = coef << 16;
+                coef = coef << 16;
             coef += rand();
         }
         coefs.push_back(coef);
@@ -109,7 +132,7 @@ BigNumber::BigNumber(int lenght)
     }
 }
 
-BigNumber::BigNumber(string& str)
+BigNumber::BigNumber(const string& str)
 {
     if (str.empty())
     {
@@ -421,15 +444,10 @@ BigNumber& BigNumber::operator-=(const BigNumber& other)
     return *this;
 }
 
-BigNumber BigNumber::operator-(const BASE& num_base)
-{
-    
-}
+//BigNumber BigNumber::operator-(const BASE& num_base)
+//{
 
-
-
-
-
+//}
 
 int main()
 {
