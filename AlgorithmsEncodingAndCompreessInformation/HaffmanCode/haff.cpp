@@ -1,4 +1,4 @@
-﻿#include "node.hpp"
+#include "node.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -180,17 +180,16 @@ void write_file(const string& filename, vector<int> freq, const que_type& queue,
         out.write(&byte, 1);
     }
 
-
-    cout << "Encode file " << "encode_" << filename  << endl;
     out.close();
+    cout << "Encode file " << "encode_" << filename  << endl;
 }
 
 Node::pointer read_compressed(const string& filename, vector<int>& freq, string& text_encode)
 {
-    ifstream in(filename, ios::binary);
+    ifstream in("encode_" + filename, ios::binary);
     if (!in)
     {
-        cerr << "File is not open" << endl;
+        cerr << "File is not open-------------" << endl;
         return nullptr;
     }
 
@@ -291,7 +290,7 @@ void Haffman_encode_decode(const string& filename)
 
     vector<int> freq_encode(256, 0);
     string read_encode = "";
-    Node::pointer root_encode = read_compressed(filename + ".ehff", freq_encode, read_encode);
+    Node::pointer root_encode = read_compressed(filename, freq_encode, read_encode);
 
     
     if (!root_encode)
@@ -312,6 +311,9 @@ int main()
     //string filename = "primer.txt";
     //string filename = "primer2.txt";
     string filename = "primer3.txt";
+
+    
     
     Haffman_encode_decode(filename);
+    return 0;
 }
