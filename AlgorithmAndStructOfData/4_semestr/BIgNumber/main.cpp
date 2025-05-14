@@ -61,11 +61,11 @@ public:
     BigNumber& operator /= (const BASE&);
 
     BigNumber operator/(const BigNumber&);//
-    BigNumber& operator/=(const BigNumber&);//
+    BigNumber& operator/=(const BigNumber&);
 
     BASE operator%(const BASE&);
 
-    void inputHex(const string& num);//
+    void inputHex();//
     string outputHex();//
 
     friend ostream& operator<<(ostream& os, const BigNumber& other);//
@@ -527,7 +527,7 @@ BigNumber& BigNumber::operator*=(const BASE& num_base)
     return *this;
 }
 
-BigNumber BigNumber::operator/(const BASE& num_base)
+BigNumber BigNumber::operator/(const BASE& num_base)//првоерить
 {
     if (num_base == 0)
     {
@@ -562,13 +562,13 @@ BigNumber BigNumber::operator/(const BASE& num_base)
     return res;
 }
 
-BigNumber& BigNumber::operator/=(const BASE& num_base)
+BigNumber& BigNumber::operator/=(const BASE& num_base)//проверить
 {
     *this = *this / num_base;
     return *this;
 }
 
-BASE BigNumber::operator%(const BASE& num_base)
+BASE BigNumber::operator%(const BASE& num_base)//проверить
 {
     if (num_base == 0)
     {
@@ -594,18 +594,107 @@ BASE BigNumber::operator%(const BASE& num_base)
 }
 
 
-void BigNumber::inputHex(const string& num)
+void BigNumber::inputHex()
 {
+    cout << "Hex string - ";
+    string str;
+    cin >> str;
 
+    int k = 0;
+    bitset<BASE_SIZE> res(0);
+
+    for (int i = str.size() - 1; i >= 0; --i)
+    {
+        int str_from_hex = 0;
+        if (str[i] >= '0' && str[i] <= '9')
+            str_from_hex = str[i] - '0';
+
+        else if (str[i] >= 'a' && str[i] <= 'f')
+            str_from_hex = str[i] - 'a' + 10;
+
+        else if (str[i] >= 'A' && str[i] <= 'F')
+            str_from_hex = str[i] - 'A' + 10;
+
+        else
+        {
+            cerr << "Error simbol not correct" << endl;
+            return;
+        }
+
+        bitset<BASE_SIZE> tmp(str_from_hex);
+        res = res | (tmp << k);
+
+        k = k + 4;
+        if (k >= BASE_SIZE)
+        {
+            k = 0;
+            coefs.push_back((BASE)res.to_ulong());
+            res.reset();
+
+        }
+    }
+
+    if (k > 0)
+    {
+        coefs.push_back((BASE)res.to_ulong());
+    }
 }
+
 string BigNumber::outputHex()
 {
+    int k = BASE_SIZE - 4;
+    string str;
 
+    for (int i = len - 1; i >= 0; --i)
+    {
+        while (k >= 0)
+        {
+            int tmp = (coefs[i] >> k) & (00010101);//15 
+            if (tmp >= 0 && tmp <= 9)
+                str += (char)(tmp + '0');
+
+            if(tmp >= 10 && tmp <= 15)
+                str += (char)(tmp - 10 + 'a');
+
+            k = k - 4;
+
+        }
+
+        str += " ";
+        k = BASE_SIZE - 4;
+    }
+
+    cout << str << endl;
 }
 
 ostream& operator<<(ostream& out, BigNumber& other)
 {
+    string res;
+    BigNumber num(other);
+    BigNumber null(1, true);
 
+    while (num != null)
+    {
+        BASE tmp = num % (BASE)10;
+
+        res = res + (char)(tmp + '0');
+        num = num / 10;
+    }
+
+    if (res.empty())
+    {
+        out << "0";
+    }
+
+    else
+    {
+        for (int i = res.size() -1; i >= 0; --i)
+        {
+            out << res[i];
+        }
+    }
+
+    return out;
 }
 
 istream& operator>>(istream& out, BigNumber& other)
@@ -613,6 +702,16 @@ istream& operator>>(istream& out, BigNumber& other)
 
 }
 
+//BigNumber BigNumber::operator/(const BigNumber& other)
+//{
+//
+//}
+//
+//BigNumber& BigNumber::operator/=(const BigNumber& other)
+//{
+//    *this = *this / other;
+//    return *this;
+//}
 
 
 void test()
@@ -623,6 +722,8 @@ void test()
 
 int main()
 {
+
+
 
     return 0;
 }
