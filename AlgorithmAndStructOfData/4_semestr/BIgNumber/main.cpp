@@ -12,8 +12,8 @@
 //typedef unsigned short BASE;//2^16 система счисления
 //tepedef unsigned int DBASE;2^32 double BASE
 
-typedef unsigned int BASE;//2^32 система счисления
-typedef unsigned long DBASE;//2 ^ 32 double BASE
+typedef unsigned long BASE;//2^32 система счисления
+typedef unsigned long long int DBASE;//2 ^ 64 double BASE
 
 #define BASE_SIZE (sizeof(BASE) * 8)
 
@@ -44,7 +44,7 @@ public:
 
     BigNumber operator+(const BASE&);
     BigNumber& operator+=(const BASE&);//coefs + BASE(одно число)
-    
+
     BigNumber operator-(const BigNumber&);
     BigNumber& operator-=(const BigNumber&);
 
@@ -69,7 +69,7 @@ public:
     string outputHex();//
 
     friend ostream& operator<<(ostream& os, const BigNumber& other);//
-    friend istream& operator>>(istream& os, const BigNumber& other);//
+    friend istream& operator>>(istream& in, const BigNumber& other);//
 };
 
 BigNumber::BigNumber(int lenght, bool fl)
@@ -395,7 +395,7 @@ BigNumber& BigNumber::operator-=(const BigNumber& other)
 }
 
 BigNumber BigNumber::operator-(const BASE& num_base)
-{    
+{
     int n = len;//тут понимаем что число this > num_base
     BigNumber res(n, true);//делаем большое число из нулей
 
@@ -404,7 +404,7 @@ BigNumber BigNumber::operator-(const BASE& num_base)
     int j = 0;//разряды
     BASE k = 0;//перенос
 
-    
+
 
     tmp = (1 << BASE_SIZE) | coefs[j];
     tmp = tmp - num_base - k;
@@ -511,7 +511,7 @@ BigNumber BigNumber::operator*(const BASE& num_base)
     }
 
     res.coefs[j] = k;
-    while(res.coefs[res.len - 1] == 0 && res.len > 1)
+    while (res.coefs[res.len - 1] == 0 && res.len > 1)
     {
         res.len--;
         res.coefs.pop_back();
@@ -542,7 +542,7 @@ BigNumber BigNumber::operator/(const BASE& num_base)//првоерить
     BASE r = 0;
     DBASE tmp;
     int j = n - 1;
-    
+
     while (j >= 0)
     {
         tmp = (r << BASE_SIZE) + coefs[j];
@@ -612,8 +612,8 @@ void BigNumber::inputHex()
         else if (str[i] >= 'a' && str[i] <= 'f')
             str_from_hex = str[i] - 'a' + 10;
 
-        else if (str[i] >= 'A' && str[i] <= 'F')
-            str_from_hex = str[i] - 'A' + 10;
+        // else if (str[i] >= 'A' && str[i] <= 'F')
+        //     str_from_hex = str[i] - 'A' + 10;
 
         else
         {
@@ -653,7 +653,7 @@ string BigNumber::outputHex()
             if (tmp >= 0 && tmp <= 9)
                 str += (char)(tmp + '0');
 
-            if(tmp >= 10 && tmp <= 15)
+            if (tmp >= 10 && tmp <= 15)
                 str += (char)(tmp - 10 + 'a');
 
             k = k - 4;
@@ -688,7 +688,7 @@ ostream& operator<<(ostream& out, BigNumber& other)
 
     else
     {
-        for (int i = res.size() -1; i >= 0; --i)
+        for (int i = res.size() - 1; i >= 0; --i)
         {
             out << res[i];
         }
@@ -697,8 +697,25 @@ ostream& operator<<(ostream& out, BigNumber& other)
     return out;
 }
 
-istream& operator>>(istream& out, BigNumber& other)
+istream& operator>>(istream& in, BigNumber& other)
 {
+    string str;
+    cin >> str;
+
+    for (char c : str)
+    {
+        int str_from_hex = 0;
+        if (c >= '0' && c <= '9')
+            str_from_hex = c - '0';
+
+        else if (c >= 'a' && c <= 'f')
+            str_from_hex = c - 'a' + 10;
+
+
+    }
+
+
+
 
 }
 
@@ -714,15 +731,21 @@ istream& operator>>(istream& out, BigNumber& other)
 //}
 
 
-void test()
-{
+// void test()
+// {
 
-}
+// }
 
 
 int main()
 {
+    BigNumber n1, n2;
 
+    n1.inputHex();
+    n2.inputHex();
+
+    cin >> n1;
+    cin >> n2;
 
 
     return 0;
