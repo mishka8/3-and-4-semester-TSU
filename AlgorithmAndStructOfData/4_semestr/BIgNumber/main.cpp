@@ -12,8 +12,8 @@
 //typedef unsigned short BASE;//2^16 система счисления
 //tepedef unsigned int DBASE;2^32 double BASE
 
-typedef unsigned long BASE;//2^32 система счисления
-typedef unsigned long long int DBASE;//2 ^ 64 double BASE
+typedef unsigned int BASE;//2^32 система счисления
+typedef unsigned long long int DBASE;//2 ^ 32 double BASE
 
 #define BASE_SIZE (sizeof(BASE) * 8)
 
@@ -44,7 +44,7 @@ public:
 
     BigNumber operator+(const BASE&);
     BigNumber& operator+=(const BASE&);//coefs + BASE(одно число)
-
+    
     BigNumber operator-(const BigNumber&);
     BigNumber& operator-=(const BigNumber&);
 
@@ -60,16 +60,209 @@ public:
     BigNumber operator/(const BASE&);
     BigNumber& operator /= (const BASE&);
 
-    BigNumber operator/(const BigNumber&);//
-    BigNumber& operator/=(const BigNumber&);
+    //BigNumber operator/(const BigNumber&);//
+    //BigNumber& operator/=(const BigNumber&);//
 
     BASE operator%(const BASE&);
+    //BigNumber operator%(const BigNumber);//
 
-    void inputHex();//
-    string outputHex();//
+    void inputHex()
+    {
+        cout << "Input hex string - ";
+        string str;
+        cin >> str;
 
-    friend ostream& operator<<(ostream& os, const BigNumber& other);//
-    friend istream& operator>>(istream& in, const BigNumber& other);//
+        // Очищаем текущие данные
+        coefs.clear();
+        len = 0;
+
+        // Проверка на пустую строку
+        if (str.empty()) {
+            coefs.push_back(0);
+            len = 1;
+            return;
+        }
+
+        bitset<BASE_SIZE> res(0);
+        int k = 0;
+
+        // Обрабатываем строку с конца к началу
+        for (int i = str.size() - 1; i >= 0; --i)
+        {
+            unsigned int int_from_hex = 0;
+
+            if (str[i] >= '0' && str[i] <= '9') {
+                int_from_hex = str[i] - '0';
+            }
+            else if (str[i] >= 'a' && str[i] <= 'f') {
+                int_from_hex = str[i] - 'a' + 10;
+            }
+            else if (str[i] >= 'A' && str[i] <= 'F') {
+                int_from_hex = str[i] - 'A' + 10;
+            }
+            else {
+                cerr << "ERROR: Invalid hex character '" << str[i] << "'" << endl;
+                coefs.clear();
+                coefs.push_back(0);
+                len = 1;
+                return;
+            }
+
+            // Добавляем 4 бита текущей цифры
+            res |= bitset<BASE_SIZE>(int_from_hex) << k;
+            k += 4;
+
+            // Если накопили полное BASE_SIZE бит
+            if (k >= BASE_SIZE) {
+                coefs.push_back((BASE)res.to_ulong());
+                res.reset();
+                k = 0;
+            }
+        }
+
+        // Добавляем оставшиеся биты
+        if (k > 0) {
+            coefs.push_back((BASE)res.to_ulong());
+        }
+
+        len = coefs.size();
+
+        // Удаляем ведущие нули
+        while (len > 1 && coefs.back() == 0) {
+            coefs.pop_back();
+            len--;
+        }
+    }
+
+    void outputHex()
+    {
+        int k = BASE_SIZE - 4;
+
+        string str;
+        for (auto ix = coefs.rbegin(); ix != coefs.rend(); ++ix)
+        {
+            while (k >= 0)
+            {
+                int tmp = (*ix >> k) & (15);
+                if (tmp >= 0 && tmp <= 9)
+                {
+                    str += (char)(tmp + '0');
+                }
+                if (tmp >= 10 && tmp <= 15)
+                {
+                    str += (char)(tmp - 10 + 'a');
+                }
+                
+                k -= 4;
+            }
+
+            str += " ";
+            k = BASE_SIZE - 4;
+        }
+
+        cout << str << endl;
+    }
+
+    friend ostream& operator<<(ostream& out, const BigNumber& other)
+    {
+        //обработка нуля
+        if (other.len == 1 && other.coefs[0] == 0) {
+            out << "0";
+            return out;
+        }
+
+        string result;
+        BigNumber u = other;//копия числа
+
+        // Константа 10 в виде BigNumber для деления
+        BASE ten = 10;
+
+        while (!(u.len == 1 && u.coefs[0] == 0))
+        {  
+            BASE t = u % 10;  // Получаем последнюю цифру
+            result += (t + '0');
+            u /= 10;  // Убираем последнюю цифру
+        }
+
+        // Выводим цифры в обратном порядке (старшие разряды сначала)
+        for (int i = result.size() - 1; i >= 0; --i) 
+        {
+            out << result[i];
+        }
+
+        return out;
+    }
+
+    friend istream& operator>>(istream& in, BigNumber& other)
+    {
+        string str;
+        in >> str;
+
+        other.coefs.clear();
+        other.len = 0;
+
+        if (str.empty())
+        {
+            other.coefs.push_back(0);
+            other.len = 1;
+
+            return in;
+        }
+
+        bitset<BASE_SIZE> res(0);
+        other.len = 0;
+        int k = 0;
+
+        for (int i = str.size() - 1; i >= 0; --i)
+        {
+            int from_str_to_int = 0;
+
+            if (str[i] >= '0' && str[i] <= '9')
+            {
+                from_str_to_int = str[i] - '0';
+            }
+            if (str[i] >= 'a' && str[i] <= 'f')
+            {
+                from_str_to_int = str[i] - 'a' + 10;
+            }
+
+            if (str[i] >= 'A' && str[i] <= 'F')
+            {
+                from_str_to_int = str[i] - 'A' + 10;
+            }
+            else
+            {
+                cerr << "ERROR symbol is not correct" << endl;
+                return in;
+            }
+
+            bitset<BASE_SIZE> tmp(from_str_to_int);
+            res = res | (tmp << k);
+
+            k += 4;
+            if (k >= BASE_SIZE)
+            {
+                k = 0;
+                other.coefs.push_back((BASE)res.to_ulong());
+                res = 0;
+            }
+        }
+
+        if (k > 0)
+        {
+            other.coefs.push_back((BASE)res.to_ulong());
+        }
+
+        other.len = other.coefs.size();
+
+        while (other.coefs[other.len - 1] == 0 && other.len > 1)
+        {
+            other.coefs.pop_back();
+            other.len--;
+        }
+
+        return in;
+    }
 };
 
 BigNumber::BigNumber(int lenght, bool fl)
@@ -84,6 +277,7 @@ BigNumber::BigNumber(int lenght, bool fl)
     if (fl == true)//если флаг true то будет большое число из нулей сделано для удобства операций
     {
         len = lenght;
+        coefs.resize(lenght);
         for (int i = 0; i < lenght; ++i)
         {
             coefs[i] = 0;
@@ -169,7 +363,7 @@ BigNumber::BigNumber(const string& str)
 
     len = coefs.size();
 
-    while (coefs[len - 1] == 0 && len != 1)
+    while (coefs[len - 1] == 0 && len > 1)
     {
         coefs.pop_back();
         len--;
@@ -200,12 +394,12 @@ bool BigNumber::operator==(const BigNumber& other) const
 bool BigNumber::operator>(const BigNumber& other) const
 {
     if (len > other.len)
-        return false;
+        return true;
 
     if (len < other.len)
         return false;
 
-    for (int i = len - 1; i < 0; ++i)
+    for (int i = len - 1; i >= 0; --i)
     {
         if (coefs[i] > other.coefs[i])
             return true;
@@ -292,7 +486,7 @@ BigNumber BigNumber::operator+(const BigNumber& other)
     sum.coefs[j] = k;
 
     //удаление если перенос равен нулю
-    if (sum.coefs[j] == 0)
+    if (sum.coefs[j] == 0 && sum.len > 1)
     {
         sum.len--;
         sum.coefs.pop_back();
@@ -327,7 +521,7 @@ BigNumber BigNumber::operator+(const BASE& num_base)
     }
 
     sum.coefs[j] = k;
-    if (sum.coefs[j] == 0)
+    if (sum.coefs[j] == 0 && sum.len > 1)
     {
         sum.len--;
         sum.coefs.pop_back();
@@ -361,7 +555,7 @@ BigNumber BigNumber::operator-(const BigNumber& other)
 
     while (j < m)//смотрим по длине other
     {
-        tmp = (1 << BASE_SIZE) | coefs[j];//искусственно увеличиваем число
+        tmp = ((DBASE)1 << BASE_SIZE) | coefs[j];//искусственно увеличиваем число
         tmp = tmp - other.coefs[j] - k;
         res.coefs[j] = (BASE)tmp;
 
@@ -371,7 +565,7 @@ BigNumber BigNumber::operator-(const BigNumber& other)
 
     while (j < n)//если осталось убираем перенос который мог остаться
     {
-        tmp = (1 << BASE_SIZE) | coefs[j];
+        tmp = ((DBASE)1 << BASE_SIZE) | coefs[j];
         tmp = tmp - k;//отнимаем перенос
 
         res.coefs[j] = (BASE)tmp;
@@ -395,7 +589,7 @@ BigNumber& BigNumber::operator-=(const BigNumber& other)
 }
 
 BigNumber BigNumber::operator-(const BASE& num_base)
-{
+{    
     int n = len;//тут понимаем что число this > num_base
     BigNumber res(n, true);//делаем большое число из нулей
 
@@ -404,9 +598,9 @@ BigNumber BigNumber::operator-(const BASE& num_base)
     int j = 0;//разряды
     BASE k = 0;//перенос
 
+    
 
-
-    tmp = (1 << BASE_SIZE) | coefs[j];
+    tmp = ((DBASE)1 << BASE_SIZE) | coefs[j];
     tmp = tmp - num_base - k;
 
     res.coefs[j] = (BASE)tmp;
@@ -414,7 +608,7 @@ BigNumber BigNumber::operator-(const BASE& num_base)
 
     while (j < n)
     {
-        tmp = (1 << BASE_SIZE) | coefs[j];
+        tmp = ((DBASE)1 << BASE_SIZE) | coefs[j];
         tmp = tmp - k;
 
         res.coefs[j] = (BASE)tmp;
@@ -443,40 +637,30 @@ BigNumber BigNumber::operator*(const BigNumber& other)
     int n = len;
     int m = other.len;
 
-    int j = 0;
-    int i = 0;
     DBASE tmp;
-    DBASE k = 0;
-
     BigNumber res(n + m, true);
 
-    while (j < m)
+    for(int j = 0; j < m; ++j)
     {
         if (other.coefs[j] == 0)
         {
-            j++;
             continue;
         }
 
-        k = 0;
-        i = 0;
-        while (i < n)
+        DBASE k = 0;
+        for(int i = 0; i < n; ++i)
         {
-            tmp = coefs[i] * other.coefs[j];  +k + res.coefs[i + j];//i + j значение на данный момент
+            tmp = (DBASE)coefs[i] * (DBASE)other.coefs[j] + k + (DBASE)res.coefs[i + j];//i + j значение на данный момент
 
             res.coefs[i + j] = (BASE)tmp;
 
             k = (BASE)(tmp >> BASE_SIZE);
-
-            i++;
         }
 
         res.coefs[n + j] = k;//последний перенос
-
-        j++;
     }
 
-    while (res.len > 1 && res.coefs.back())
+    while (res.len > 1 && res.coefs[res.len - 1] == 0)
     {
         res.len--;
         res.coefs.pop_back();
@@ -496,22 +680,21 @@ BigNumber BigNumber::operator*(const BASE& num_base)
     int n = len;
     BigNumber res(n + 1, true);
 
-    int j = 0;
+
     DBASE k = 0;
     DBASE tmp;
 
-    while (j < n)
+    for(int j = 0; j < n; ++j)
     {
         tmp = coefs[j] * num_base + k;//возможно надо каждую переменную приводить явно к DBASE
         res.coefs[j] = (BASE)tmp;
 
         k = (BASE)(tmp >> BASE_SIZE);
-
-        j++;
     }
 
-    res.coefs[j] = k;
-    while (res.coefs[res.len - 1] == 0 && res.len > 1)
+    res.coefs[n] = k;
+
+    while(res.coefs[res.len - 1] == 0 && res.len > 1)
     {
         res.len--;
         res.coefs.pop_back();
@@ -527,225 +710,103 @@ BigNumber& BigNumber::operator*=(const BASE& num_base)
     return *this;
 }
 
-BigNumber BigNumber::operator/(const BASE& num_base)//првоерить
+BigNumber BigNumber::operator/(const BASE& num)
 {
-    if (num_base == 0)
+    if (num == 0)
     {
-        cerr << "del from 0 IN /";
-        exit(-1);
+        cout << "ERRRRRRRRROR" << endl;
+        exit(-2);
     }
 
     int n = len;
 
-    BigNumber res(n, true);
-
+    BigNumber div(n, true);
+    div.len = n;
     BASE r = 0;
     DBASE tmp;
-    int j = n - 1;
 
-    while (j >= 0)
+
+    for (int j = n - 1; j >= 0; --j)//работает по принципу деления столбиком по сути
     {
-        tmp = (r << BASE_SIZE) + coefs[j];
-
-        res.coefs[j] = (BASE)(tmp / num_base);
-        r = (BASE)(tmp % num_base);
-
-        j--;
+        tmp = (((DBASE)r << BASE_SIZE) + (DBASE)coefs[j]);  //  tmp = r * b +  ceofs[j]
+        div.coefs[j] = (BASE)(tmp / num);
+        r = (BASE)(tmp % num);//остаток
     }
 
-    while (res.coefs.back() == 0 && res.len > 1)
-    {
-        res.len--;
-        res.coefs.pop_back();
+    //Нормализация: удаление ведущих нулей
+
+    while (div.len > 1 && div.coefs.back() == 0) {
+        div.coefs.pop_back();
+        div.len--;
     }
 
-    return res;
+    return div;
 }
 
-BigNumber& BigNumber::operator/=(const BASE& num_base)//проверить
+BigNumber& BigNumber::operator/=(const BASE& num)
 {
-    *this = *this / num_base;
+    *this = *this / num;
     return *this;
 }
 
-BASE BigNumber::operator%(const BASE& num_base)//проверить
+BASE BigNumber::operator% (const BASE& num)
 {
-    if (num_base == 0)
+    if (num == 0)
     {
-        cerr << "del from 0 IN %";
+        cout << "ERRROR" << endl;
         exit(-1);
     }
 
-    BASE res = 0;
     int n = len;
-    int j = n - 1;
+    BASE r = 0;
     DBASE tmp;
 
-    while (j >= 0)
+    int j = 0;
+
+    while (j < n)
     {
-        tmp = (res << BASE_SIZE) + coefs[j];
+        tmp = (((DBASE)r << BASE_SIZE) + (DBASE)coefs[n - 1 - j]);// tmp = r * b +  ceofs[n - 1 - j]
 
-        res = (BASE)(tmp & num_base);
-
-        j--;
+        r = (BASE)(tmp % num);
+        j++;
     }
 
-    return res;
+    return r;
 }
-
-
-void BigNumber::inputHex()
-{
-    cout << "Hex string - ";
-    string str;
-    cin >> str;
-
-    int k = 0;
-    bitset<BASE_SIZE> res(0);
-
-    for (int i = str.size() - 1; i >= 0; --i)
-    {
-        int str_from_hex = 0;
-        if (str[i] >= '0' && str[i] <= '9')
-            str_from_hex = str[i] - '0';
-
-        else if (str[i] >= 'a' && str[i] <= 'f')
-            str_from_hex = str[i] - 'a' + 10;
-
-        // else if (str[i] >= 'A' && str[i] <= 'F')
-        //     str_from_hex = str[i] - 'A' + 10;
-
-        else
-        {
-            cerr << "Error simbol not correct" << endl;
-            return;
-        }
-
-        bitset<BASE_SIZE> tmp(str_from_hex);
-        res = res | (tmp << k);
-
-        k = k + 4;
-        if (k >= BASE_SIZE)
-        {
-            k = 0;
-            coefs.push_back((BASE)res.to_ulong());
-            res.reset();
-
-        }
-    }
-
-    if (k > 0)
-    {
-        coefs.push_back((BASE)res.to_ulong());
-    }
-}
-
-string BigNumber::outputHex()
-{
-    int k = BASE_SIZE - 4;
-    string str;
-
-    for (int i = len - 1; i >= 0; --i)
-    {
-        while (k >= 0)
-        {
-            int tmp = (coefs[i] >> k) & (00010101);//15 
-            if (tmp >= 0 && tmp <= 9)
-                str += (char)(tmp + '0');
-
-            if (tmp >= 10 && tmp <= 15)
-                str += (char)(tmp - 10 + 'a');
-
-            k = k - 4;
-
-        }
-
-        str += " ";
-        k = BASE_SIZE - 4;
-    }
-
-    cout << str << endl;
-}
-
-ostream& operator<<(ostream& out, BigNumber& other)
-{
-    string res;
-    BigNumber num(other);
-    BigNumber null(1, true);
-
-    while (num != null)
-    {
-        BASE tmp = num % (BASE)10;
-
-        res = res + (char)(tmp + '0');
-        num = num / 10;
-    }
-
-    if (res.empty())
-    {
-        out << "0";
-    }
-
-    else
-    {
-        for (int i = res.size() - 1; i >= 0; --i)
-        {
-            out << res[i];
-        }
-    }
-
-    return out;
-}
-
-istream& operator>>(istream& in, BigNumber& other)
-{
-    string str;
-    cin >> str;
-
-    for (char c : str)
-    {
-        int str_from_hex = 0;
-        if (c >= '0' && c <= '9')
-            str_from_hex = c - '0';
-
-        else if (c >= 'a' && c <= 'f')
-            str_from_hex = c - 'a' + 10;
-
-
-    }
-
-
-
-
-}
-
-//BigNumber BigNumber::operator/(const BigNumber& other)
-//{
-//
-//}
-//
-//BigNumber& BigNumber::operator/=(const BigNumber& other)
-//{
-//    *this = *this / other;
-//    return *this;
-//}
-
-
-// void test()
-// {
-
-// }
-
 
 int main()
 {
-    BigNumber n1, n2;
+    //+ += - -= 
+    BigNumber num1("f"); // 15
+    BigNumber num2("10"); // 16
+    num1.outputHex();
+    num2.outputHex();
 
-    n1.inputHex();
-    n2.inputHex();
+    BigNumber num3(5); // случайное 5-разрядное число
 
-    cin >> n1;
-    cin >> n2;
+    num3.outputHex();
+    cout << num3;
+
+    num2 += num1;
+    num2.outputHex(); // Должно вывести "1f" (15 + 16 = 31)
+
+    // Тест вычитания
+    num2 -= num1;
+    num2.outputHex(); // Должно вывести "ffffffffffffff1"
+
+    BigNumber num4(0);
+
+    num4 = num1 + num2 + num2 + num1 - num1 - num2;
+    num4.outputHex();
+
+    BigNumber num5(0);
+
+    num5 = num1 * num3;
+    num5.outputHex();
+
+    num5 *= num1;
+    num5.outputHex();
+
 
 
     return 0;
