@@ -4,22 +4,21 @@
 #include <random>
 #include <bitset>
 
-typedef unsigned char BASE;       // [0; 2^16]
-typedef unsigned short DBASE;         // [0; 2^32]
-// DBASE нужен для промежуточных вычислений
+//typedef unsigned char base;//2^8 система счисления
+//typedef unsigned short dbase;//2^16 double base
 
-// В качестве основания выбирать: 2^8, 2^16, 2^32
+//typedef unsigned short BASE;//2^16 система счисления
+//typedef unsigned int DBASE;//2^32 double BASE
+
+typedef unsigned int BASE;//2^32 система счисления
+typedef unsigned long long int DBASE;//2 ^ 32 double BASE
+
 #define BASE_SIZE (sizeof(BASE) * 8)   // 2 * 8 == 16 (бит)
 #define DBASE_SIZE (sizeof(DBASE) * 8) // 4 * 8 == 32 (бит)
 #define BASE_NUM_SHORT 10000;// 15000;
 #define BASENUM ((DBASE)1 << BASE_SIZE)
 
 using namespace std;
-
-
-// Представление числа: X = a_0 + a_1*b + a_2*(b^2) + ... + a_(n-1)*(b^(n-1))
-// Массив коэффицентов: {a_0, a_1, a_2, ..., a_(n-1)}
-
 
 class BigNumber
 {
@@ -82,13 +81,13 @@ public:
 
         if (bits > 0)
         {
-            result.coefs.reserve(coefs.size() + bits);
-            result.coefs.resize(bits, 0);
-            result.coefs.insert(result.coefs.end(), coefs.begin(), coefs.end());
+            result.coefs.reserve(coefs.size() + bits);// Резервируем память
+            result.coefs.resize(bits, 0);// Заполняем старшие разряды нулями
+            result.coefs.insert(result.coefs.end(), coefs.begin(), coefs.end());//перекопируем то что было
         }
         else if (bits < 0)
         {
-            int shift_size = static_cast<int>(coefs.size()) + bits;
+            int shift_size = static_cast<int>(coefs.size()) + bits;//явно преобразуем тип
             if (shift_size <= 0)
             {
                 result.coefs.reserve(1);
@@ -97,18 +96,18 @@ public:
             else
             {
                 result.coefs.reserve(shift_size);
-                result.coefs.insert(result.coefs.end(), coefs.begin() - bits, coefs.end());
+                result.coefs.insert(result.coefs.end(), coefs.begin() - bits, coefs.end());// Копируем часть коэффициентов
             }
         }
         else
         {
             result.coefs.reserve(coefs.size());
-            result.coefs = coefs;
+            result.coefs = coefs;// Просто копируем исходное число
         }
 
         int k = coefs.size() - 1;
 
-        while (coefs[k] == 0 && coefs.size() > 1)
+        while (coefs[k] == 0 && coefs.size() > 1)//удаляем нули из начала 
         {
             coefs.pop_back();
             k--;
@@ -149,7 +148,6 @@ BigNumber::BigNumber(unsigned int len, int choice)
     }
 }
 
-// Конструктор по строке
 BigNumber::BigNumber(string& numInHex)
 {
     if (numInHex.empty())
@@ -205,7 +203,6 @@ BigNumber::BigNumber(string& numInHex)
     }
 }
 
-// Конструтор копирования
 BigNumber::BigNumber(const BigNumber& other)
 {
     for (int i = 0; i < other.coefs.size(); i++)
@@ -578,13 +575,14 @@ BigNumber BigNumber::operator/ (const BASE& num)
 {
     if (!num)
     {
-        cout << "Error: in operator/ (other / 0)!\n";
+        cout << "Error other == 0 !!!!\n";
         exit(-3);
     }
 
     int len = coefs.size();
 
-    if (len == 0) return BigNumber(1, 2);
+    if (len == 0) 
+        return BigNumber(1, 2);
 
     BigNumber result;
 
@@ -623,19 +621,22 @@ BigNumber& BigNumber::operator/= (const BASE& num)
 
 BigNumber BigNumber::operator/ (const BigNumber& other)
 {
-    BigNumber zeroNum(1, 2); // Нулевое число (Для проверки на ноль у делителя)
-    BigNumber u(*this); // Делимое
-    BigNumber v(other);   // Делитель
+    BigNumber zeroNum(1, 2);// Нулевое число (Для проверки на ноль у делителя)
+    BigNumber u(*this);// Делимое
+    BigNumber v(other);// Делитель
 
-    int sizeL = this->coefs.size(); // Длина делимого
-    int sizeR = other.coefs.size();   // Длина делителя
 
-    if (sizeL == 0 || sizeR == 0) return zeroNum;
+    //длины чисел
+    int sizeL = this->coefs.size();
+    int sizeR = other.coefs.size();   
 
-    int m = sizeL - sizeR; // Длина частного
+    if (sizeL == 0 || sizeR == 0)//ПРОВЕРКА НА НОЛЬ
+        return zeroNum;
 
-    BASE d = 0;  // Для нормализации
-    DBASE b = BASENUM; // Основание
+    int m = sizeL - sizeR;// Длина частного
+
+    BASE d = 0;// Для нормализации
+    DBASE b = ((DBASE)1 << (sizeof(BASE) * 8));// Основание
 
     if (zeroNum == other)
     {
@@ -643,9 +644,9 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
         exit(-3);
     }
     if (sizeR == 1)
-        return *this / other.coefs[0];
+        return *this / other.coefs[0];//ДЕЛИМ НА ОДНУ ЦИФРУ
 
-    if (*this == other)
+    if (*this == other)//1 ЕСЛИ ЧИСЛА РАВНЫ 
         return zeroNum + 1;
 
     if (*this < other)
@@ -653,16 +654,16 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
 
 
     // Нормализация.
-    // На этом шаге делимое(u) и делитель(v) становится длиннее на один разряд.
+    // На этом шаге u и v становится длиннее на один разряд.
     // Частное от этого не изменится.
-    // d = [b / (v_(n-1) + 1)]
-    // Обеспечивает, условия v_n-1 >= [b/2]. Частное в этом случае будет более приблеженное 
+    // d = [b / (v_(n-1) + 1)] 
     d = BASE(b / (DBASE(other.coefs.back()) + DBASE(1)));
     u = u * d;
+    v = v * d;
 
     // Если u не стало длиннее, то необходимо присвоить u_n+m зн-ие 0.
     if (u.coefs.size() == sizeL) u.coefs.push_back(0);
-    v = v * d;
+    
 
     // Начальная установка
     int i = m;
@@ -673,21 +674,19 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
     result.coefs.resize(m + 1, 0);
 
 
-    while (i >= 0) {
+    while (i >= 0) 
+    {
         if (i + sizeR >= u.coefs.size())
         {
             while (i + sizeR >= u.coefs.size()) u.coefs.push_back(0);
         }
 
-        // Вычисляем q и r по модифицированным формулам. Они гарантируют что q` = q или q` - 1 = q
         // q - частное, r - остаток
-
+        //берём две старшие цифры делимого и делим на старшую цифру делителя
         DBASE q = ((DBASE(u.coefs[i + sizeR]) << BASE_SIZE) + DBASE(u.coefs[i + sizeR - 1])) / (DBASE(v.coefs[sizeR - 1]));
         DBASE r = ((DBASE(u.coefs[i + sizeR]) << BASE_SIZE) + DBASE(u.coefs[i + sizeR - 1])) % (DBASE(v.coefs[sizeR - 1]));
 
-        // Проверка выполнения условий q == b или q * v_n-2 > b * r + u_j+n-2
-        // Если выполняется, то q--, r = r + v_n-1 и повторяем проверку, если r < b
-
+        //Чтобы избежать переполнения или ошибки в вычитании.
         if (q == b || (DBASE(q) * DBASE(v.coefs[sizeR - 2])) > ((DBASE(r) << BASE_SIZE) + DBASE(u.coefs[i + sizeR - 2])))
         {
             q--;
@@ -711,13 +710,13 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
         {
             q--;
             t = v * (BASE)q;
-            t = t.Shift(i);
+            t = t.Shift(i);// Умножаем на b^i (сдвиг влево)
         }
 
         // Вычитаем из tmp произведение делителя на частное.
         u = u - t;
 
-        // Найденное частное идет в результат.
+        //записываем цифру частного
         result.coefs[i] = (BASE)q;
 
         // Переход к следующему разряду.
@@ -736,7 +735,34 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
     return result;
 }
 
-BigNumber BigNumber::operator% (const BigNumber& other) {
+// u = [5, 4, 8, 1](число 5481).
+//Делитель v = [3, 5](число 35).
+//Умножаем на d = 2 :
+//u = [10, 9, 6, 2](10962),
+//v = [7, 0](70).
+ 
+ 
+//10 и 9 → 109 / 7 ≈ 15.
+//Корректируем до q = 1.
+
+ 
+//Вычитаем :t = [7, 0] * 1 = [7, 0], 
+//сдвигаем на 2 разряда : [7, 0, 0, 0] .
+//u = [10, 9, 6, 2] - [7, 0, 0, 0] = [3, 9, 6, 2].
+
+
+
+// Следующая цифра :396 / 7 ≈ 56 → корректируем до 5.
+// Вычитаем[7, 0] * 5 = [35, 0](сдвиг на 1) : [3, 5, 0, 0] .
+// u = [3, 9, 6, 2] - [3, 5, 0, 0] = [0, 4, 6, 2].
+
+// res - Частное[1, 5, 6](156), остаток[2, 1](21).
+
+
+
+
+BigNumber BigNumber::operator% (const BigNumber& other)//работает так же как деление но возвращает остаток.
+{
     BigNumber zeroNum(1, 2);
     if (other == zeroNum)
     {
@@ -759,6 +785,9 @@ BigNumber BigNumber::operator% (const BigNumber& other) {
     int n = other.coefs.size();
     int m = coefs.size() - n;
 
+    // Нормализация.
+    // На этом шаге u и v становится длиннее на один разряд.
+    // Частное от этого не изменится.
     DBASE b = BASENUM;
     BASE d = BASE(b / (DBASE(other.coefs.back()) + DBASE(1)));
 
@@ -767,11 +796,13 @@ BigNumber BigNumber::operator% (const BigNumber& other) {
 
     v *= d;
 
+    //Добавляем нулевую старшую цифру, если число не стало длиннее
     if (coefs.size() == u.coefs.size())
     {
         u.coefs.push_back(0);
     }
 
+    //две старшие цифры делимого и делим на старшую цифру делителя
     for (int j = m; j >= 0; --j)
     {
         if (j + n >= u.coefs.size())
@@ -790,6 +821,7 @@ BigNumber BigNumber::operator% (const BigNumber& other) {
         }
         if (r < BASENUM)
         {
+            // Коррекция q
             if ((q == BASENUM) || (q * v.coefs[n - 2] > ((r << BASE_SIZE) + u.coefs[j + n - 2])))
             {
                 q--;
@@ -803,15 +835,16 @@ BigNumber BigNumber::operator% (const BigNumber& other) {
         if (u < temp) {
             q--;
             temp = v * BASE(q);
-            temp = temp.Shift(j);
+            temp = temp.Shift(j);//умножаем на сдвигн влево 
         }
 
-        u = u - temp;
+        u = u - temp;// Вычитаем из делимого
     }
 
     u = u / d;
     int k = u.coefs.size() - 1;
 
+    //удаляем нули 
     while (u.coefs[k] == 0 && u.getLength() > 1)
     {
         u.coefs.pop_back();
