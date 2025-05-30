@@ -130,16 +130,13 @@ BigNumber::BigNumber(unsigned int len, int choice)
     {
         for (int i = 0; i < len; i++)
         {
-            // Инициализация генератора случайных чисел
-            srand(time(0));
-
-            BASE coefficent = rand(); // Генерирует случайное число
+            BASE coef = rand();
 
             // Для ситуации, когда последний коэффицент равен 0 (без ведущих нулей)
-            if (i == len - 1 && !coefficent)
-                while (!coefficent) coefficent = rand();
+            if (i == len - 1 && !coef)
+                while (!coef) coef = rand();
 
-            coefs.push_back(coefficent);
+            coefs.push_back(coef);
         }
     }
     else
@@ -992,9 +989,6 @@ istream& operator>> (istream& in, BigNumber& other)
 
 void Test()
 {
-    // Инициализация генератора случайных чисел
-    srand(time(0));
-
     int M = 1000, T = 1000;
 
     int len1 = 0;
@@ -1016,6 +1010,8 @@ void Test()
 
 int main()
 {
+    srand(time(0));
+
     Test();
 
     return 0;
