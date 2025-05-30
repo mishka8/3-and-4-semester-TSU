@@ -1,6 +1,5 @@
 using System;
 
-
 interface IFigure
 {
     double Square();
