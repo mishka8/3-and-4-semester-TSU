@@ -4,14 +4,14 @@
 #include <random>
 #include <bitset>
 
-//typedef unsigned char base;//2^8 система счисления
-//typedef unsigned short dbase;//2^16 double base
+typedef unsigned char BASE;//2^8 система счисления
+typedef unsigned short DBASE;//2^16 double base
 
 //typedef unsigned short BASE;//2^16 система счисления
 //typedef unsigned int DBASE;//2^32 double BASE
 
-typedef unsigned int BASE;//2^32 система счисления
-typedef unsigned long long int DBASE;//2 ^ 32 double BASE
+//typedef unsigned int BASE;//2^32 система счисления
+//typedef unsigned long long int DBASE;//2 ^ 32 double BASE
 
 #define BASE_SIZE (sizeof(BASE) * 8)   // 2 * 8 == 16 (бит)
 #define DBASE_SIZE (sizeof(DBASE) * 8) // 4 * 8 == 32 (бит)
@@ -653,8 +653,18 @@ BigNumber BigNumber::operator/ (const BigNumber& other)
     // Нормализация.
     // На этом шаге u и v становится длиннее на один разряд.
     // Частное от этого не изменится.
-    // d = [b / (v_(n-1) + 1)] 
-    d = BASE(b / (DBASE(other.coefs.back()) + DBASE(1)));//старший разряд делителя был >= b/2 чт обы нормально делить 
+    //q′ никогда не будет меньше q
+    // 
+    // 
+    //для быстрой коррекции q
+    //так как по второй теореме мы можем выполнить коррекцию не больше двух раз
+    //старший разряд делителя был >= b/2 чтобы нормально делить 
+    d = BASE(b / (DBASE(other.coefs.back()) + DBASE(1)));//старшая цифра делителя v(n − 1)
+    //коэффициент, который масштабирует делимое и делитель
+     
+    
+    //старшая цифра делителя будет больше половины основания системы это важно для теорем которые позволяют быстро находить q
+    //и сокрашения коррекции 
     u = u * d;
     v = v * d;
 
@@ -805,7 +815,8 @@ BigNumber BigNumber::operator% (const BigNumber& other)//работает так
         BigNumber temp = v * BASE(q);
         temp = temp.Shift(j);
 
-        if (u < temp) {
+        if (u < temp) 
+        {
             q--;
             temp = v * BASE(q);
             temp = temp.Shift(j);//умножаем на сдвигн влево 
@@ -986,8 +997,8 @@ void Test()
 
 int main()
 {
-    srand(0);
-
+    srand(0);  
+    
     Test();
 
     return 0;
