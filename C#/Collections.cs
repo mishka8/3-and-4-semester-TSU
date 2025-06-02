@@ -1,67 +1,95 @@
 using System;
 using System.Collections.Generic;
 
-class Program
+public class Stack<type>
 {
-    static void Main()
+    private readonly List<type> st;
+
+    public Stack(int size = 10)
     {
-        Stack<int> numbers = new Stack<int>();
+        st = new List<type>(size);
+    }
 
-        //добавляем числа в стек
-        numbers.Push(5);
-        numbers.Push(10);
-        numbers.Push(15);
+    public int Count => st.Count;//размерность
+    public bool IsEmpty => Count == 0;//првоерка на пустоту
 
-        Console.WriteLine("что в стеке:");
-        foreach (int num in numbers)
+    public void Push(type value)//положить
+    {
+        st.Add(value);
+    }
+
+    public type Pop()//вытащить
+    {
+        if (IsEmpty)
+            throw new InvalidOperationException("is empty");
+
+        int lastIndex = st.Count - 1;
+        type item = st[lastIndex];
+        st.RemoveAt(lastIndex);//
+        return item;
+    }
+
+    public type Peek()//что сверху
+    {
+        if (IsEmpty)
+            throw new InvalidOperationException("Стек пуст!");
+
+        return st[st.Count - 1];
+    }
+
+    public void Clear()//очистка удаление элементов
+    {
+        st.Clear();
+    }
+
+    public void PrintStack()//вывод
+    {
+        Console.WriteLine("элементов - " + Count);
+        for (int i = st.Count - 1; i >= 0; i--)
         {
-            Console.Write(num + " ");
+            Console.WriteLine("[" + i + "]" + " - " + st[i]);
         }
         Console.WriteLine();
-        Console.WriteLine();
+    }
+}
 
-        // Извлекаем два верхних числа
-        int a = numbers.Pop();
-        int b = numbers.Pop();
-        Console.WriteLine("достали - " + a + " " + b);
-        Console.WriteLine();
+class Program
+{
+    static void Main(string[] args)
+    {
+        var stack = new Stack<int>();
 
-        // Складываем их
+        
+        stack.Push(10);
+        stack.Push(15);
+        stack.Push(4);
+        Console.WriteLine("наш стек");
+        stack.PrintStack();
+        
+
+        Console.WriteLine("Пример работы со стеком");
+        int a = stack.Pop();
+        int b = stack.Pop();
+        Console.WriteLine("1 - " + a);
+        Console.WriteLine("2 -  " + b);
+
+
         int sum = a + b;
         Console.WriteLine("Сумма - " + sum);
         Console.WriteLine();
 
-        //обратно
-        numbers.Push(sum);
+        stack.Push(sum);
+        Console.WriteLine("наш стек");
+        stack.PrintStack();
 
-        Console.WriteLine("что осталось в стеке");
-        foreach (int num in numbers)
-        {
-            Console.Write(num + " ");
-        }
-        Console.WriteLine();
-        Console.WriteLine();
-
-        a = numbers.Pop();
-        b = numbers.Pop();
-
-        Console.WriteLine("достали - " + a + " " + b);
+        Console.WriteLine("\nДобавляем 4 и 5:");
+        stack.Push(4);
+        stack.Push(5);
+        stack.PrintStack();
         Console.WriteLine();
 
-        sum = a + b;
-
-        Console.WriteLine("Сумма - " + sum);
-        Console.WriteLine();
-
-
-        numbers.Push(sum);
-        Console.WriteLine("что осталось");
-
-        foreach (int num in numbers)
-        {
-            Console.WriteLine(num);
-        }
-
-
+        Console.WriteLine("Очистка стека:");
+        stack.Clear();
+        stack.PrintStack();
     }
 }
