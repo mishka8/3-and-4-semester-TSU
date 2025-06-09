@@ -239,31 +239,45 @@ public:
             delete node;
         }
 
-        //узел имеет оба поддерева
-        //находим наибольший узел в левом поддереве
-        //копируем его значение в удаляемый узел
-        //удаляем этот наибольший узел
-
+        //минимальный узел в правом поддереве
+        //максимальный в правом поддереве
+        //копируем значение нужное значение в удаляемый узел
+        //удаляем найденный узел-замену
         else
         {
-            Node* tmp = node->left;
-            prew = node;
+            Node* minRight = node->right;//переходим к следующему
+            Node* minRightParent = node;
 
-            while (tmp->left)
+            while (minRight->left)//ищем самый левый минимальный узел в правом поддереве
             {
-                prew = tmp;
-                tmp = tmp->left;
+                minRightParent = minRight;
+                minRight = minRight->left;
             }
 
-            node->key = tmp->key;
+            // Копируем значение минимального узла в тот который удаляем
+            node->key = minRight->key;
 
-            if (tmp == prew->left)
-                prew->left = tmp->right;
+            //Удаляем оригинальный минимальный узел
+            if (minRight == minRightParent->left)
+                minRightParent->left = minRight->right;
             else
-                prew->right = tmp->right;
+                minRightParent->right = minRight->right;
 
-            delete tmp;
+            delete minRight;
         }
+        //на примере 5
+        //node = 5
+        //node->right = 7
+        //и дальше ищем минимальный справа таким образом что переходим каждый раз влево
+        //запоминаем минимальный справа дальше вставляем его на место удаляемого
+        //и потом удаляем минимальный на том месте где мы его нашли
+        // 
+        //Исходное:       После замены:      После удаления:
+        //     5               6                 6
+        //    / \             / \               / \
+        //   3    7          3   7             3   7
+        //  / \  / \        / \ / \           / \   \
+        // 2  4 6   8      2  4 6  8         2   4   8
     }
 
     Node* min_node()
@@ -375,26 +389,26 @@ int main()
 
     cout << tree << endl;
 
-//    tree.del_node(5);//переделать удаление
+    tree.del_node(5);//переделать удаление
 
-//    cout << tree << endl;
-
-
-    Node* min = tree.min_node();
-    cout << "Minimum: " << min->get_key() << endl;
-
-    Node* max = tree.max_node();
-    cout << "Maximum: " << max->get_key() << endl;
-    cout << endl;
+    cout << tree << endl;
 
 
-    cout << "left_node_right" << endl;
-    tree.left_node_right();  // 2 3 4 5 6 7 8
-    cout << endl;
+    //Node* min = tree.min_node();
+    //cout << "Minimum: " << min->get_key() << endl;
 
-    cout << "way_in_weight" << endl;
-    tree.way_in_width();
-    cout << endl;
+    //Node* max = tree.max_node();
+    //cout << "Maximum: " << max->get_key() << endl;
+    //cout << endl;
+
+
+    //cout << "left_node_right" << endl;
+    //tree.left_node_right();  // 2 3 4 5 6 7 8
+    //cout << endl;
+
+    //cout << "way_in_weight" << endl;
+    //tree.way_in_width();
+    //cout << endl;
 
 
     return 0;
