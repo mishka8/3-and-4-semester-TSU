@@ -271,13 +271,14 @@ public:
         //и дальше ищем минимальный справа таким образом что переходим каждый раз влево
         //запоминаем минимальный справа дальше вставляем его на место удаляемого
         //и потом удаляем минимальный на том месте где мы его нашли
-        // 
+        //
         //Исходное:       После замены:      После удаления:
         //     5               6                 6
         //    / \             / \               / \
-        //   3    7          3   7             3   7
+        //   3    9          3   7             3   7
         //  / \  / \        / \ / \           / \   \
-        // 2  4 6   8      2  4 6  8         2   4   8
+        // 2  4    10      2  4 6  8         2   4   8
+        //
     }
 
     Node* min_node()
@@ -393,22 +394,26 @@ int main()
 
     cout << tree << endl;
 
+    tree.del_node(6);//переделать удаление
 
-    //Node* min = tree.min_node();
-    //cout << "Minimum: " << min->get_key() << endl;
-
-    //Node* max = tree.max_node();
-    //cout << "Maximum: " << max->get_key() << endl;
-    //cout << endl;
+    cout << tree << endl;
 
 
-    //cout << "left_node_right" << endl;
-    //tree.left_node_right();  // 2 3 4 5 6 7 8
-    //cout << endl;
+    Node* min = tree.min_node();
+    cout << "Minimum: " << min->get_key() << endl;
 
-    //cout << "way_in_weight" << endl;
-    //tree.way_in_width();
-    //cout << endl;
+    Node* max = tree.max_node();
+    cout << "Maximum: " << max->get_key() << endl;
+    cout << endl;
+
+
+    cout << "left_node_right" << endl;
+    tree.left_node_right();  // 2 3 4 5 6 7 8
+    cout << endl;
+
+    cout << "way_in_weight" << endl;
+    tree.way_in_width();
+    cout << endl;
 
 
     return 0;
