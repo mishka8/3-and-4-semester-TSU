@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <time.h>
+#include <queue>
 
 using namespace std;
 
@@ -10,14 +11,19 @@ class Node
     int key;
     Node* left;
     Node* right;
+    int hight;
+    int balans;
+
 
 public:
 
-    Node(int k = 0, Node* l = nullptr, Node* r = nullptr)
+    Node(int k = 0, Node* l = nullptr, Node* r = nullptr, int h = 0, int bal = 0)
     {
         key = k;
         left = l;
         right = r;
+        hight = h;
+        balans = bal;
     }
 
     ~Node() = default;
@@ -27,7 +33,28 @@ public:
         return key;
     }
 
+    int get_hight()
+    {
+        return hight;
+    }
+
+    int get_balans()
+    {
+        return balans;
+    }
+    
+    void set_hight(int h)
+    {
+        hight = h;
+    }
+
+    void set_balans(int bal)
+    {
+        balans = bal;
+    }
+
     friend class BinTree;
+    friend class AvlTree;
 };
 
 class BinTree
@@ -271,14 +298,13 @@ public:
         //и дальше ищем минимальный справа таким образом что переходим каждый раз влево
         //запоминаем минимальный справа дальше вставляем его на место удаляемого
         //и потом удаляем минимальный на том месте где мы его нашли
-        //
+        // 
         //Исходное:       После замены:      После удаления:
         //     5               6                 6
         //    / \             / \               / \
-        //   3    9          3   7             3   7
+        //   3    7          3   7             3   7
         //  / \  / \        / \ / \           / \   \
-        // 2  4    10      2  4 6  8         2   4   8
-        //
+        // 2  4 6   8      2  4 6  8         2   4   8
     }
 
     Node* min_node()
@@ -370,51 +396,304 @@ public:
         }
         cout << endl;
     }
+
+    friend class AvlTree;
 };
+
+class AvlTree : public BinTree
+{
+private:
+    void updateHeightAndBalance(Node* node)
+    {
+        //вычисляем высоты поддеревьев
+        int leftH = (node->left) ? node->left->get_hight() : -1;//проверяем наличие поддерева и берем его высоту если есть или -1 если его нет 
+        int rightH = (node->right) ? node->right->get_hight() : -1;
+
+        node->set_hight(max(leftH, rightH) + 1);//устанавливаем новую высоту и новый баланс
+        node->set_balans(rightH - leftH);
+    }
+
+
+public:
+    int SetHight(Node* node)//если нет потомков у узла то высота узла будет 0
+    {
+        if (node == nullptr)
+        {
+            return -1;//-1 высота пустого дерева
+        }
+
+        //за счет рекурсии вычиляем правое и левое дерево их высоты
+        int leftH = SetHight(node->left);
+        int rightH = SetHight(node->right);
+
+        //Высота текущего узла = максимальная из высот поддеревьев + 1
+        int current = max(leftH, rightH) + 1;
+        node->set_hight(current);
+
+        return current;
+    }
+
+    void set_root_hight()//для всего дерева
+    {
+        SetHight(root);
+    }
+
+    void set_root_balans()//баланс для всего дерева
+    {
+        if (!root)
+        {
+            return;
+        }
+
+        //баланс это правая высота минус левая
+
+        queue<Node*> tmp;//очередь для обхода в ширину
+        tmp.push(root);
+
+        Node* current;
+
+        while (!tmp.empty())
+        {
+            current = tmp.front();//первый узел в очереди
+
+            int leftH = -1;//если нет поддерева то будет -1
+            if (current->left != nullptr)
+                leftH = current->left->get_hight();
+
+            int rightH = -1;//если нет поддерева то будет -1
+            if (current->right != nullptr)
+                rightH = current->right->get_hight();
+
+            current->set_balans(rightH - leftH);//счиатем наш баланс
+
+            if (current->left)//проверяем левый и правый потомок и добавляем в очередь
+                tmp.push(current->left);
+            if (current->right)
+                tmp.push(current->right);
+
+            tmp.pop();//удаляем узел который отработан
+        }
+    }
+
+    //r: баланс -2; слева s: баланс -1 одинарный правый поворот 
+    //r->left = s->right;
+    //s->right = r;
+    //return s;
+    Node* RTurn(Node* r)//когда левое поддерево 
+    {
+        if (!r || !r->left)
+            return r;
+
+        Node* s = r->left;//запоминаем левого потомка
+
+        r->left = s->right;//перемещаем правое в левое
+        s->right = r;//делаем r правым потомком в s
+
+        updateHeightAndBalance(r);//балансим дополнительно
+        updateHeightAndBalance(s);
+
+        return s;
+    }
+
+    //Однократный поворот налево L
+    //r: баланс +2; справа s: баланс +1
+    //r->right = s->left;
+    //s->left = r;
+    //return s;
+    Node* LTurn(Node* r)
+    {
+        if (!r || !r->right)
+            return r;
+        
+        Node* s = r->right;
+        r->right = s->left;
+        s->left = r;
+
+        updateHeightAndBalance(r);//балансим допольнительно
+        updateHeightAndBalance(s);
+
+        return s;
+    }
+
+    //Двукратный поворот LR выполняется в случае
+    //когда баланс в вершине
+    //становится равным - 2, а баланс в потомке слева равен + 1
+    //r: баланс -2; слева s: баланс +1.
+    //s->right = p->left;
+    //p->left = s;
+    //r->left = p->right;
+    //p->right = r;
+    //return p;
+    Node* LRTurn(Node* r)
+    {
+        if (!r || !r->right)
+            return r;
+
+        Node* s = r->left;
+        if (!s || !s->right)
+            return r;
+
+        Node* p = s->right;
+
+        s->right = p->left;
+        p->left = s;
+
+        r->left = p->right;
+        p->right = r;
+
+        updateHeightAndBalance(s);//балансим 
+        updateHeightAndBalance(r);
+        updateHeightAndBalance(p);
+
+
+        return p;
+    }
+    
+    //Двукратный поворот RL(направо - налево) выполняется в случае
+    //когда баланс в вершине
+    //становится равным + 2, а баланс в потомке справа равен - 1
+    //r: баланс + 2; справа s : баланс - 1.
+    //s->left = p->right;
+    //p->right = s;
+    //r->right = p->left;
+    //p->left = r;
+    //return p;
+    Node* RLTurn(Node* r) 
+    { 
+        if (!r || !r->right) 
+            return r;
+        
+        Node* s = r->right;
+        if (!s || !s->left) 
+            return r;
+        
+        Node* p = s->left;
+
+        s->left = p->right;
+        p->right = s;
+
+        r->right = p->left;
+        p->left = r;
+
+        updateHeightAndBalance(s);//балансим
+        updateHeightAndBalance(r);
+        updateHeightAndBalance(p);
+
+        return p;
+    }
+    
+
+
+    Node* insertBalance(Node* node, int key)
+    {
+        if (node == nullptr)//дошли до места вставки 
+            return new Node(key, nullptr, nullptr, 0, 0);
+
+        //спускаемся по дереву смотрим куда идти влево или вправо
+        if (key < node->key)
+            node->left = insertBalance(node->left, key);
+        else if (key > node->key)
+            node->right = insertBalance(node->right, key);
+        else
+            return node;
+
+        updateHeightAndBalance(node);//обновляем высоту и баланс
+
+        if (node->get_balans() == -2)//проверка баланса и подбираем по условиям нужный поворот
+        {
+            if (node->left->get_balans() == 1)
+                return LRTurn(node);//двойной поворот когда разные знаки 
+            else
+                return RTurn(node);//елси одинаковые знаки то одинарный поворот 
+        }
+        else if (node->get_balans() == 2)
+        {
+            if (node->right->get_balans() == -1)
+                return RLTurn(node);
+            else
+                return LTurn(node);
+        }
+
+        return node;
+    }
+
+    void insert(int key)
+    {
+        root = insertBalance(root, key);
+    }
+};
+
 
 int main()
 {
-    srand(time(0));
+    //srand(time(0));
+
+    //BinTree tree;
+    //tree.add(5);
+    //tree.add(3);
+    //tree.add(7);
+    //tree.add(2);
+    //tree.add(4);
+    //tree.add(6);
+    //tree.add(10);
+    //tree.add(8);
+    //tree.add(15);
+
+    //cout << tree << endl;
+
+    //tree.del_node(5);//переделать удаление
+
+    //cout << tree << endl;
+
+    //Node* min = tree.min_node();
+    //cout << "Minimum: " << min->get_key() << endl;
+
+    //Node* max = tree.max_node();
+    //cout << "Maximum: " << max->get_key() << endl;
+    //cout << endl;
 
 
-    BinTree tree;
-    tree.add(5);
-    tree.add(3);
-    tree.add(7);
-    tree.add(2);
-    tree.add(4);
-    tree.add(6);
-    tree.add(10);
-    tree.add(8);
-    tree.add(15);
+    //cout << "left_node_right" << endl;
+    //tree.left_node_right();  // 2 3 4 5 6 7 8
+    //cout << endl;
 
-    cout << tree << endl;
+    //cout << "way_in_weight" << endl;
+    //tree.way_in_width();
+    //cout << endl;
 
-    tree.del_node(5);//переделать удаление
+    AvlTree test;
+    test.insert(10);
+    test.insert(20);
+    test.insert(30);
+    test.insert(15);
+    test.insert(5);
+    test.insert(38);
+    test.insert(23);
+    test.insert(19);
+    test.insert(3);
+    test.insert(8);
+    test.insert(16);
+    
 
-    cout << tree << endl;
+    cout << test << endl << endl << endl;
 
-    tree.del_node(6);//переделать удаление
+    AvlTree test2;
+    test2.insert(10);
+    test2.insert(20);
+    test2.insert(30);
+    test2.insert(15);
+    test2.insert(5);
+    test2.insert(38);
+    test2.insert(23);
+    test2.insert(19);
+    test2.insert(3);
+    test2.insert(8);
+    test2.insert(16);
+    test2.insert(18);
+    test2.insert(17);
+    test2.insert(15);
+    test2.insert(14);
+    //тут будет видно как меняется вершина по мере добавления новых ключей
 
-    cout << tree << endl;
-
-
-    Node* min = tree.min_node();
-    cout << "Minimum: " << min->get_key() << endl;
-
-    Node* max = tree.max_node();
-    cout << "Maximum: " << max->get_key() << endl;
-    cout << endl;
-
-
-    cout << "left_node_right" << endl;
-    tree.left_node_right();  // 2 3 4 5 6 7 8
-    cout << endl;
-
-    cout << "way_in_weight" << endl;
-    tree.way_in_width();
-    cout << endl;
-
-
-    return 0;
+    cout << test2 << endl;
 }
