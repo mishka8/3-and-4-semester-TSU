@@ -10,7 +10,6 @@ class Node
     Node* right;
     int hight;
 
-
 public:
 
     Node(int k = 0, Node* l = nullptr, Node* r = nullptr, int h = 0)
@@ -391,8 +390,8 @@ private:
     void updateHeight(Node* node)//чтобы использвоал только этот класс
     {
         //вычисляем высоты поддеревьев
-        int leftH = (node->left) ? node->left->get_hight() : -1;//проверяем наличие поддерева и берем его высоту если есть или -1 если его нет 
-        int rightH = (node->right) ? node->right->get_hight() : -1;
+        int leftH = (node->left) ? node->left->get_hight() : 0;//проверяем наличие поддерева и берем его высоту если есть или -1 если его нет 
+        int rightH = (node->right) ? node->right->get_hight() : 0;
 
         node->set_hight(max(leftH, rightH) + 1);//устанавливаем новую высоту и новый баланс
     }
@@ -402,8 +401,8 @@ private:
         if (!node) 
             return 0;
         
-        int leftH = (node->left) ? node->left->get_hight() : -1;
-        int rightH = (node->right) ? node->right->get_hight() : -1;
+        int leftH = (node->left) ? node->left->hight : 0;
+        int rightH = (node->right) ? node->right->hight : 0;
         
         return rightH - leftH;
     }
@@ -521,7 +520,7 @@ public:
 
     Node* insertBalance(Node* node, int key)
     {
-        if (node == nullptr)//дошли до места вставки 
+        if (node == nullptr)//дошли до места вставки
             return new Node(key, nullptr, nullptr, 0);
 
         //спускаемся по дереву смотрим куда идти влево или вправо
@@ -541,7 +540,7 @@ public:
             if (getBalance(node->left) == 1)
                 return LRTurn(node);//двойной поворот когда разные знаки 
             else
-                return RTurn(node);//елси одинаковые знаки то одинарный поворот 
+                return RTurn(node);//елси одинаковые знаки то одинарный поворот
         }
         else if (balanse == 2)
         {
@@ -553,7 +552,8 @@ public:
 
         return node;
     }
-
+    
+    
     void insert(int key)
     {
         root = insertBalance(root, key);
@@ -630,7 +630,27 @@ int main()
     test2.insert(17);
     test2.insert(15);
     test2.insert(14);
+    test2.insert(2);
+    
+    cout << test2 << endl;
+    
+    test2.insert(45);
     //тут будет видно как меняется вершина по мере добавления новых ключей
 
     cout << test2 << endl;
+    
+    AvlTree test3;
+    
+    test3.insert(10);
+    test3.insert(6);
+    test3.insert(12);
+    test3.insert(5);
+    test3.insert(8);
+    test3.insert(7);
+    
+    cout << test3 << endl;
+    
+    
+    
+    
 }
